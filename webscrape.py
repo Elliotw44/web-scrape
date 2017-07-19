@@ -4,7 +4,8 @@ __author__ = 'eweil'
 import requests
 import bs4
 import csv
-import multiprocessing
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
 
 def IsListingPage(page):
     title_text = page.find_all('title')[0].get_text()
@@ -44,10 +45,10 @@ def HandleURL(url):
     try:
         child_link = requests.get(url)
     except IOError:
-        raise BaseException
+        return
     child_soup = bs4.BeautifulSoup(child_link.content, 'html.parser')
     if not IsListingPage(child_soup):
-        raise BaseException
+        return
     else:
         return ParseInfoFromListingPage(child_soup, url)
 
@@ -58,7 +59,6 @@ def main():
     base_url = "http://jamesonsothebys.com"
     base_page_url = 'http://jamesonsothebys.com/eng/sales/usa/'
     urls = []
-    records = []
     while pages_parsed < number_of_pages:
         page = requests.get(base_page_url + PageURlAddOn(pages_parsed))
         soup = bs4.BeautifulSoup(page.content, 'html.parser')
@@ -70,25 +70,19 @@ def main():
                 urls.append(base_url + link.attrs['href'])
         pages_parsed += 1
 
-    output = multiprocessing.Queue()
-    for url in urls:
-        try:
-            url_info = HandleURL(url)
-            records.append(url_info)
-        except BaseException:
-            continue
+    pool = ThreadPool(13)
+    records = pool.map(HandleURL, urls)
+    pool.close()
+    pool.join()
 
-    with open('url_data.csv', 'w') as csvfile:
+    with open('url_data.csv', 'wb') as csvfile:
         field_names = ["mls", "address", "url"]
         datawriter = csv.DictWriter(csvfile, fieldnames=field_names)
         datawriter.writeheader()
         for record in records:
             datawriter.writerow({"mls": record['mls'], "address": record['address'], "url": record['url']})
 
-
-
-
-
-main()
+if __name__ == '__main__':
+    main()
 
 
