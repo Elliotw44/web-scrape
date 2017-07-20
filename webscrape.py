@@ -57,7 +57,7 @@ def main():
     number_of_pages = int(raw_input("please enter the number of pages to parse: "))
     pages_parsed = 0
     base_url = "http://jamesonsothebys.com"
-    base_page_url = 'http://jamesonsothebys.com/eng/sales/usa/'
+    base_page_url = 'http://jamesonsothebys.com/eng/sales/chicago-il-usa/'
     urls = []
     while pages_parsed < number_of_pages:
         page = requests.get(base_page_url + PageURlAddOn(pages_parsed))
