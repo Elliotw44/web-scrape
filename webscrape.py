@@ -23,15 +23,15 @@ def GetMLSNumber(listing_page):
                     return str[num_start:].strip()
             except AttributeError:
                 continue
-
-
+                
+                
 def ParseInfoFromListingPage(listing_page, url):
     title_text = listing_page.find_all('title')[0].get_text()
     pipe_one = title_text.find('|')
     address = title_text[0:pipe_one-1]
     mls_num = GetMLSNumber(listing_page)
-    record = {'address': address, 'mls': mls_num, 'url': url}
-    return record
+    return {'address': address, 'mls': mls_num, 'url': url}
+
 
 
 def PageURlAddOn(pages_parsed):
@@ -65,9 +65,8 @@ def main():
         for link in soup.find_all('a'):
             if 'href' in link.attrs and link.attrs['href'].find('/eng/sales/detail/') == 0:
                 url = (base_url + (link.attrs['href']))
-                if url in urls:
-                    continue
-                urls.append(base_url + link.attrs['href'])
+                if url not in urls:
+                    urls.append(base_url + link.attrs['href'])
         pages_parsed += 1
 
     pool = ThreadPool(13)
