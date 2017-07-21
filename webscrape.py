@@ -1,11 +1,10 @@
 __author__ = 'eweil'
-
-
 import requests
 import bs4
 import csv
 from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool
+
 
 def IsListingPage(page):
     title_text = page.find_all('title')[0].get_text()
@@ -33,7 +32,6 @@ def ParseInfoFromListingPage(listing_page, url):
     return {'address': address, 'mls': mls_num, 'url': url}
 
 
-
 def PageURlAddOn(pages_parsed):
     if pages_parsed == 0:
         return ""
@@ -59,6 +57,7 @@ def main():
     base_url = "http://jamesonsothebys.com"
     base_page_url = 'http://jamesonsothebys.com/eng/sales/chicago-il-usa/'
     urls = []
+    #Find all the URLs we want to parse
     while pages_parsed < number_of_pages:
         page = requests.get(base_page_url + PageURlAddOn(pages_parsed))
         soup = bs4.BeautifulSoup(page.content, 'html.parser')
@@ -68,12 +67,12 @@ def main():
                 if url not in urls:
                     urls.append(base_url + link.attrs['href'])
         pages_parsed += 1
-
+    #Parse all the URLs using ThreadPool
     pool = ThreadPool(13)
     records = pool.map(HandleURL, urls)
     pool.close()
     pool.join()
-
+    #Write parsed information to CSV file
     with open('url_data.csv', 'wb') as csvfile:
         field_names = ["mls", "address", "url"]
         datawriter = csv.DictWriter(csvfile, fieldnames=field_names)
@@ -83,5 +82,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
